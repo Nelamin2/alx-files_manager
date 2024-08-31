@@ -1,55 +1,51 @@
 import { createClient } from 'redis';
 
-/**
- * Class for performing operations with Redis service
- */
 class RedisClient {
   constructor() {
-    this.client = createClient({
-      url: 'redis://127.0.0.1:6379'
-    });
+    this.client = createClient();
+    this.client.on('error', (err) => console.error('Redis Client Error', err));
 
-    this.client.on('error', (error) => {
-      console.error(`Redis client not connected to the server: ${error.message}`);
-    });
-
-    // Ensure the client connects before performing operations
-    this.client.connect().catch(err => {
-      console.error('Failed to connect to Redis server:', err.message);
-    });
+    this.client.connect()
+      .then(() => console.log('Redis client connected'))
+      .catch((err) => console.error('Error connecting Redis client', err));
   }
 
+  // Check if Redis is alive (connected)
   isAlive() {
-    // Return true if the client is connected and open
-    return this.client.isOpen;
+    return this.client.isReady;
   }
 
+  // Get the value of a key from Redis
   async get(key) {
-    if (this.isAlive()) {
-      return await this.client.get(key);
-    } else {
-      console.error('Redis client is not connected.');
+    try {
+      const value = await this.client.get(key);
+      return value;
+    } catch (error) {
+      console.error('Error getting data from Redis:', error);
       return null;
     }
   }
 
+  // Set a value in Redis with an expiration time (in seconds)
   async set(key, value, duration) {
-    if (this.isAlive()) {
-      await this.client.setEx(key, duration, value);
-    } else {
-      console.error('Redis client is not connected.');
+    try {
+      const valueStr = value.toString();  // Ensure the value is a string
+      await this.client.setEx(key, duration, valueStr);
+    } catch (error) {
+      console.error('Error setting data in Redis:', error);
     }
   }
 
+  // Delete a key from Redis
   async del(key) {
-    if (this.isAlive()) {
+    try {
       await this.client.del(key);
-    } else {
-      console.error('Redis client is not connected.');
+    } catch (error) {
+      console.error('Error deleting data from Redis:', error);
     }
   }
 }
 
+// Export an instance of RedisClient
 const redisClient = new RedisClient();
 export default redisClient;
-
