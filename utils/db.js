@@ -18,6 +18,8 @@ class DBClient {
   // checks if the mongoddb is connected
   isAlive() {
     return this.client && this.client.isConnected();
+    console.log('MongoDB Status:', dbAlive);
+
 }
 
   async nbUsers() {

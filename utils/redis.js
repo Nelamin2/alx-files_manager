@@ -8,7 +8,8 @@ class RedisClient {
   }
 
   isAlive() {
-    return this.client.connected;
+    // The correct property to check Redis connection status is `this.client.isOpen`
+    return this.client.isOpen;
   }
 
   async get(key) {
@@ -17,7 +18,7 @@ class RedisClient {
       const value = await getAsync(key);
       return value;
     } catch (err) {
-      return (`Failed to get ${key}: ${err.messsage}`);
+      return (`Failed to get ${key}: ${err.message}`);
     }
   }
 
@@ -26,7 +27,7 @@ class RedisClient {
     try {
       await setAsync(key, value, 'EX', duration);
     } catch (err) {
-      throw new Error(`Failed to set ${key}: ${err.messsage}`);
+      throw new Error(`Failed to set ${key}: ${err.message}`);
     }
   }
 
@@ -35,7 +36,7 @@ class RedisClient {
     try {
       await delAsync(key);
     } catch (err) {
-      console.log(`Failed to delete ${key}: ${err.messsage}`);
+      console.log(`Failed to delete ${key}: ${err.message}`);
     }
   }
 }
