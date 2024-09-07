@@ -1,40 +1,49 @@
 import { createClient } from 'redis';
-import { promisify } from 'util';
 
 class RedisClient {
   constructor() {
+    // Initialize the Redis client
     this.client = createClient();
-    this.client.on('error', (err) => console.log('Redis client not connected to the server: ', err.message));
+    
+    // Listen for errors
+    this.client.on('error', (err) => {
+      console.log('Redis client not connected to the server:', err.message);
+    });
+
+    // Connect to the Redis server
+    this.client.connect().then(() => {
+      console.log('Redis client connected to the server');
+    }).catch((err) => {
+      console.log('Error connecting Redis client:', err.message);
+    });
   }
 
+  // Check if Redis is alive by confirming the connection status
   isAlive() {
-    // The correct property to check Redis connection status is `this.client.isOpen`
     return this.client.isOpen;
   }
 
   async get(key) {
-    const getAsync = promisify(this.client.get).bind(this.client);
     try {
-      const value = await getAsync(key);
+      const value = await this.client.get(key);
       return value;
     } catch (err) {
-      return (`Failed to get ${key}: ${err.message}`);
+      console.log(`Failed to get ${key}: ${err.message}`);
+      return null;
     }
   }
 
   async set(key, value, duration) {
-    const setAsync = promisify(this.client.set).bind(this.client);
     try {
-      await setAsync(key, value, 'EX', duration);
+      await this.client.set(key, value, { EX: duration });
     } catch (err) {
-      throw new Error(`Failed to set ${key}: ${err.message}`);
+      console.log(`Failed to set ${key}: ${err.message}`);
     }
   }
 
   async del(key) {
-    const delAsync = promisify(this.client.del).bind(this.client);
     try {
-      await delAsync(key);
+      await this.client.del(key);
     } catch (err) {
       console.log(`Failed to delete ${key}: ${err.message}`);
     }
